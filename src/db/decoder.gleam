@@ -49,9 +49,11 @@ pub fn generate_row_type(table: schema.Table) {
     True -> io.debug("Type definition already exists, skipping generation.")
     False -> {
       append(to: path, contents: type_definition)
-      io.debug("WORKED!")
+      io.debug("Generating...")
     }
   }
+
+
 }
 
 // Function to append decoder functions to an existing file
@@ -130,9 +132,11 @@ pub fn generate_decoder_code(table: schema.Table) {
     False -> {
       simplifile.create_directory("./src/funs/")
       append(to: path, contents: decoder_code)
-      io.debug("WORKED!")
+      io.debug("Generating...")
     }
   }
+
+
 }
 
 fn simple_hash(columns: List(schema.Column)) -> String {

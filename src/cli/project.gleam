@@ -61,10 +61,8 @@ pub fn find_schema_files() -> Result(dict.Dict(String, String), Nil) {
   io.println("Current root: " <> current_root)
   
   let assert Ok(cwd) = simplifile.current_directory()
-  io.debug(simplifile.current_directory())
   
   let assert Ok(pattern) = globlin.new_pattern(filepath.join(cwd, "/src/schema/*.gleam"))
-  io.debug(pattern)
   
   case globlin_fs.glob(pattern, returning: globlin_fs.RegularFiles) {
     Ok(files) -> {
@@ -126,23 +124,20 @@ pub fn create_files(input: dict.Dict(String, String)) {
 
 pub fn work() {
     let assert Ok(cwd) = simplifile.current_directory()
-    io.debug(cwd)
   case
     shellout.command(
       "gleam",
       ["run", "-m", "funs/generate"],
-      in: "./",
+      in: cwd <> "/",
       opt: [],
     )
   {
     Ok(res) -> {
       io.println("Successfully generated types and decoders.")
-      io.debug(res)
       Ok(Nil)
     }
     Error(e) -> {
       io.debug("Error generating types and decoders")
-      io.debug(e)
       Error(Nil)
     }
   }
