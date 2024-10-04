@@ -25,21 +25,18 @@ pub fn generate_row_type(table: schema.Table) {
 
   let capitalized_name = string.capitalise(table.name)
   let unique_id = simple_hash(columns)
-  let path = "./src/schema/" <> table.name <> ".gleam"
+  let path = "./src/funs/" <> table.name <> ".gleam"
+  let type_name = capitalized_name <> "Row" <> unique_id
   let type_definition =
     "pub type "
-    <> capitalized_name
-    <> "Row"
-    <> unique_id
+    <> type_name
     <> " { "
-    <> capitalized_name
-    <> "Row"
-    <> unique_id
+    <> type_name
     <> "("
     <> fields
     <> ") }\n"
 
-  simplifile.create_directory("./src/schema/")
+  simplifile.create_directory("./src/funs/")
 
   // Read the existing file content
   let existing_content = case read(path) {
@@ -47,8 +44,8 @@ pub fn generate_row_type(table: schema.Table) {
     Error(_) -> ""
   }
 
-  // Check if the type definition already exists
-  case string.contains(existing_content, type_definition) {
+  // Check if the type name already exists
+  case string.contains(existing_content, type_name) {
     True -> io.debug("Type definition already exists, skipping generation.")
     False -> {
       append(to: path, contents: type_definition)
@@ -63,7 +60,7 @@ pub fn generate_decoder_code(table: schema.Table) {
   let capitalized_name = string.capitalise(table.name)
   let unique_id = simple_hash(columns)
   let decoder_name = table.name <> "_decoder_" <> string.lowercase(unique_id)
-  let path = "./src/schema/" <> table.name <> "_decoder.gleam"
+  let path = "./src/funs/" <> table.name <> "_decoder.gleam"
 
   // Read the existing file content
   let existing_content = case read(path) {
@@ -72,7 +69,7 @@ pub fn generate_decoder_code(table: schema.Table) {
   }
 
   // Check if the necessary imports are already present
-  let import_schema = "import schema/" <> table.name
+  let import_schema = "import funs/" <> table.name
   let import_decode = "import decode"
   let imports =
     case string.contains(existing_content, import_schema) {
@@ -127,11 +124,11 @@ pub fn generate_decoder_code(table: schema.Table) {
     <> fields
     <> "\n}\n"
 
-  // Check if the decoder function already exists
-  case string.contains(existing_content, decoder_code) {
+  // Check if the decoder function name already exists
+  case string.contains(existing_content, decoder_name) {
     True -> io.debug("Decoder function already exists, skipping generation.")
     False -> {
-      simplifile.create_directory("./src/schema/")
+      simplifile.create_directory("./src/funs/")
       append(to: path, contents: decoder_code)
       io.debug("WORKED!")
     }
