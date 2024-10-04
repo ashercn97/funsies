@@ -1,20 +1,48 @@
 # funsies
 
+> Use your database with childlike enthusiasm. Its more than fun-- it's funsies!
+
 A fun, type-safe ORM for `Gleam`! (Work in progress, expect big changes! ALSO ASK QUESTIONS IF YOU WANT/NEED/ARE INTERESTED IN ANY OF IT!)
+
+> [!IMPORTANT]
+> Now with a CLI! Now, have your schemas automatically generate types and decoders!
 
 ## About
 
 `Funsies` is a work in progress.
 
-My goal with `funsies` was to create an easy to use, friendly ORM for this magical language we call `Gleam`.
+My goal with `funsies` was to create an easy-to-use, friendly ORM for this magical language we call `Gleam`.
 
-I think that gleam has a ton of potential for the web (with `erlang` and `javascript` targets). But, to date the DB landscape in Gleam is wonderful, but a bit bare-bones.
+I think that Gleam has a ton of potential for the web (with `erlang` and `javascript` targets). But, to date the DB landscape in Gleam is wonderful, but a bit bare-bones.
 
 There are a few great projects (like squirrel) for using raw SQL, and some libraries for generating queries. There were not, however, many libraries for real, full-featured ORMs.
 
-Thats what `funsies` is for!
+That's what `funsies` is for!
 
-`Funsies` has awesome code-gen abilities, type-safety, and is (in my opinion) really fun to use.
+`Funsies` has awesome code-gen abilities, and type-safety, and is (in my opinion) fun to use.
+
+## Usage (with CLI)
+
+`Funsies` works based on Schemas. These schemas are used all the time when using `funsies`.
+
+In the pre-CLI days, you would have to use the provided functions to generate the types and decoders.
+
+This came with a couple of challenges:
+
+- Where do I keep my schemas? Are they separate from the rest of my code?
+- How do I create the types and decoders? Should I write a script? Just call a function? Or, worst of all, write it by hand?!
+
+Now, we have a CLI to manage the hard parts! All you do is create a `src/schema` folder. In that folder, you would create a file along the lines of `{schema_name}.gleam` and inside you would make a public function like this:
+
+```gleam
+pub fn {schema_name} {
+{schema}
+}
+```
+
+Where schema is the schema you would normally put in your code, and the schema name is the same thing that you put in your file name.
+
+Now, run `gleam run -m funsies` and it will magically generate a new folder (`src/funs`) with files for each and every one of your Schemas!
 
 ## Usage
 
@@ -24,7 +52,7 @@ To use funsies, clone the repo, add it to your project, and read through the tut
 
 ## Tutorial
 
-First, setup a database object with the `gleam_pgo` package.
+First, set up a database object with the `gleam_pgo` package.
 
 ```gleam
   let db =
