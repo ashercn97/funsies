@@ -1,0 +1,41 @@
+{> with table as Table 
+
+
+{> fn columns(table: Table)
+{% for col as Column in table.columns %}{{ string.replace(string.capitalise(col.name), "_", "") }}{% endfor %}
+{> endfn
+
+{> fn columns2(table: Table)
+{% for col as Column in table.columns %}{{ string.replace(col.name, "_", "") }}{% endfor %}
+{> endfn
+
+{> fn columnsyay(table: Table)
+{%for col as Column in table.columns%} {{ col.name }}, {% endfor %}
+{> endfn
+
+{> fn num(table: Table)
+{%for i in to_list(range(1, list.length(table.columns)))%} ${{ int.to_string(i) }}, {% endfor %}
+{> endfn
+
+
+
+
+{> import db/schema.{type Table, type Column}
+{> import gleam/string 
+{> import gleam/int 
+{> import gleam/pgo.{type Value} 
+{> import gleam/iterator.{range, to_list}
+
+
+
+
+
+
+import funs/{{ table.name }}_decoder
+import funs/{{ table.name }}
+import gleam/pgo 
+
+pub fn insert(db: pgo.Connection, values: List(Value)) -> Result({{ table.name }}.{{ string.capitalise(table.name) }}{[ string_builder.from_string(string.trim(string_builder.to_string(columns(table)))) ]}, pgo.QueryError) {
+  let query = "INSERT INTO {{ table.name }} ({[ columnsyay(table) ]}) VALUES ({[ num(table) ]})"
+  pgo.execute(db, [values], {{ table.name }}.{{ table.name }}_decoder_{[ columns2(table) ]})
+}

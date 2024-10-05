@@ -1,0 +1,21 @@
+{> import db/schema.{type Table, type Column}
+{> import gleam/string 
+
+{> fn columns(table: Table)
+{% for col as Column in table.columns %}{{ string.replace(string.capitalise(col.name), "_", "") }}{% endfor %}
+{> endfn
+
+{> fn columns2(table: Table)
+{% for col as Column in table.columns %}{{ string.replace(col.name, "_", "") }}{% endfor %}
+{> endfn
+
+{> with table as Table 
+
+import funs/{{ table.name }}_decoder
+import funs/{{ table.name }}
+import gleam/pgo 
+
+pub fn get_all(db: pgo.Connection) -> Result({{ table.name }}.{{ string.capitalise(table.name) }}{[ string_builder.from_string(string.trim(string_builder.to_string(columns(table)))) ]}, pgo.QueryError) {
+  let query = "SELECT * FROM {{ table.name }}"
+  pgo.execute(db, [], {{ table.name }}.{{ table.name }}_decoder_{[ columns2(table) ]})
+}

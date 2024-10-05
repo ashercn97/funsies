@@ -18,6 +18,8 @@ pub fn generate_row_type(table: schema.Table) {
         schema.IntColumn(name) -> name <> ": Int"
         schema.BoolColumn(name) -> name <> ": Bool"
         schema.SerialColumn(name) -> name <> ": Int"
+        schema.ForeignKeyColumn(name, _, _, ref_type) -> name <> ": " <> ref_type
+
         _ -> ""
       }
     })
@@ -100,6 +102,8 @@ pub fn generate_decoder_code(table: schema.Table) {
           "  |> decode.field(" <> int.to_string(index) <> ", decode.bool)"
         schema.SerialColumn(name) ->
           "  |> decode.field(" <> int.to_string(index) <> ", decode.int)"
+        schema.ForeignKeyColumn(name, _, _, ref_type) ->
+          "  |> decode.field(" <> int.to_string(index) <> ", decode." <> string.lowercase(ref_type) <> ")"
         _ -> "  |> decode.field(" <> int.to_string(index) <> ", decode.string)"
       }
     })
