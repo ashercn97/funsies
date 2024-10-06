@@ -4,14 +4,14 @@ import gleam/dynamic
 import gleam/int
 import gleam/list
 import gleam/queue
-import gleam/result
+import gleam/option
 import gleam/string
 
 pub type QueryBuilder {
   QueryBuilder(
     table: schema.Table,
     select_columns: List(String),
-    where_clauses: List(String),
+    where_clauses: List(Eq),  // Change to List(Eq)
     order_by_clauses: List(String),
   )
 }
@@ -64,20 +64,47 @@ fn to_string(value: Value) -> String {
   }
 }
 
-pub fn equals(builder: WhereBuilder, col: String, value: v) {
-  WhereBuilder(
-    builder.table,
-    list.append(builder.clauses, [Equals(col, wrap_value(dynamic.from(value)))]),
-  )
+fn is_right_value(value: Value, target: Value) -> Bool {
+  case value, target {
+    IntValue(_), IntValue(_) -> True
+    StringValue(_), StringValue(_) -> True
+    BoolValue(_), BoolValue(_) -> True
+    _, _ -> False
+  }
+}
+
+fn is_col_type(table: schema.Table, col: String, value: Value) -> Bool {
+  let assert Ok(col) = list.find(table.columns, fn(c) { c.name == col })
+  case col {
+    schema.StringColumn(_, _) -> is_right_value(value, StringValue("Test"))
+    schema.BoolColumn(_) -> is_right_value(value, BoolValue(True))
+    schema.ForeignKeyColumn(_, _, _, _) -> is_right_value(value, IntValue(1))
+    // assumption TODO
+    schema.IntColumn(_) -> is_right_value(value, IntValue(1))
+    schema.SerialColumn(_) -> is_right_value(value, IntValue(1))
+    // assumption TODO
+  }
+}
+
+pub fn equals(builder: WhereBuilder, col: String, value: v) -> WhereBuilder {
+  let wrapped_value = wrap_value(dynamic.from(value))
+  case is_col_type(builder.table, col, wrapped_value) {
+    True -> WhereBuilder(
+      builder.table,
+      list.append(builder.clauses, [Equals(col, wrapped_value)]),
+    )
+  False -> 
+    WhereBuilder(
+      builder.table,
+      list.append(builder.clauses, [Equals(col, ErrorValue("Type mismatch"))]),
+    )
+  }
 }
 
 pub fn not(builder: WhereBuilder) -> WhereBuilder {
   case queue.pop_back(queue.from_list(builder.clauses)) {
     Ok(#(eq, rest)) ->
-      WhereBuilder(
-        builder.table,
-        list.append(queue.to_list(rest), [Not(eq)])
-      )
+      WhereBuilder(builder.table, list.append(queue.to_list(rest), [Not(eq)]))
     _ -> builder
   }
 }
@@ -89,7 +116,7 @@ pub fn or(builder: WhereBuilder) -> WhereBuilder {
         Ok(#(eq2, rest2)) ->
           WhereBuilder(
             builder.table,
-            list.append(queue.to_list(rest2), [Or(eq1, eq2)])
+            list.append(queue.to_list(rest2), [Or(eq1, eq2)]),
           )
         _ -> builder
       }
@@ -104,7 +131,7 @@ pub fn and(builder: WhereBuilder) -> WhereBuilder {
         Ok(#(eq2, rest2)) ->
           WhereBuilder(
             builder.table,
-            list.append(queue.to_list(rest2), [And(eq1, eq2)])
+            list.append(queue.to_list(rest2), [And(eq1, eq2)]),
           )
         _ -> builder
       }
@@ -116,39 +143,62 @@ pub fn wb(table: schema.Table) -> WhereBuilder {
   WhereBuilder(table, [])
 }
 
-fn build_where(builder: WhereBuilder) -> String {
+fn build_where(builder: WhereBuilder) -> Result(String, String) {
   let clauses = queue.from_list(builder.clauses)
+  let built_clauses_result = build(clauses, [])
 
-  string.join(build(clauses, []), " AND ")
+  case built_clauses_result {
+    Ok(built_clauses) ->
+      case list.is_empty(built_clauses) {
+        True -> Ok("")  // No WHERE clause needed
+        False ->
+        Ok(" WHERE " <> string.join(built_clauses, " AND "))
+      }
+
+    Error(e) ->
+      Error(e)  // Propagate the error
+  }
 }
 
-fn build(clauses, acc) {
+fn build(clauses, acc) -> Result(List(String), String) {
   case queue.pop_back(clauses) {
     Ok(#(Equals(col, val), rest)) ->
-      build(rest, list.append(acc, [col <> " = " <> to_string(val)]))
-    Ok(#(Not(eq), rest)) -> {
-      let not_clause = "NOT (" <> string.join(build(queue.from_list([eq]), []), " AND ") <> ")"
-      build(rest, list.append(acc, [not_clause]))
-    }
-    Ok(#(Or(eq1, eq2), rest)) -> {
-      let or_clause =
-        "("
-        <> string.join(build(queue.from_list([eq1]), []), " AND ")
-        <> " OR "
-        <> string.join(build(queue.from_list([eq2]), []), " AND ")
-        <> ")"
-      build(rest, list.append(acc, [or_clause]))
-    }
-    Ok(#(And(eq1, eq2), rest)) -> {
-      let and_clause =
-        "("
-        <> string.join(build(queue.from_list([eq1]), []), " AND ")
-        <> " AND "
-        <> string.join(build(queue.from_list([eq2]), []), " AND ")
-        <> ")"
-      build(rest, list.append(acc, [and_clause]))
-    }
-    _ -> acc
+      case val {
+        ErrorValue(err) ->
+          Error(err)  // Immediately return the error
+        _ ->
+          build(rest, list.append(acc, [col <> " = " <> to_string(val)]))
+      }
+
+    Ok(#(Not(eq), rest)) ->
+      case build(queue.from_list([eq]), []) {
+        Ok(not_clause_list) -> {
+          let not_clause = "NOT (" <> string.join(not_clause_list, " AND ") <> ")"
+          build(rest, list.append(acc, [not_clause]))
+        }
+        Error(e) -> Error(e)
+      }
+
+    Ok(#(Or(eq1, eq2), rest)) ->
+      case build(queue.from_list([eq1, eq2]), []) {
+        Ok(or_clause_list) -> {
+          let or_clause = "(" <> string.join(or_clause_list, " OR ") <> ")"
+          build(rest, list.append(acc, [or_clause]))
+        }
+        Error(e) -> Error(e)
+      }
+
+    Ok(#(And(eq1, eq2), rest)) ->
+      case build(queue.from_list([eq1, eq2]), []) {
+        Ok(and_clause_list) -> {
+          let and_clause = "(" <> string.join(and_clause_list, " AND ") <> ")"
+          build(rest, list.append(acc, [and_clause]))
+        }
+        Error(e) -> Error(e)
+      }
+
+    _ ->
+      Ok(acc)
   }
 }
 
@@ -172,7 +222,7 @@ pub fn where(builder: QueryBuilder, condition: WhereBuilder) -> QueryBuilder {
   QueryBuilder(
     builder.table,
     builder.select_columns,
-    list.append(builder.where_clauses, [build_where(condition)]),
+    list.append(builder.where_clauses, condition.clauses),  // Append Eq directly
     builder.order_by_clauses,
   )
 }
@@ -192,22 +242,23 @@ pub fn order_by(
 }
 
 // Build the final SQL query
-pub fn to_sql(builder: QueryBuilder) -> String {
+pub fn to_sql(builder: QueryBuilder) -> Result(String, String) {
   let base_query =
     "SELECT "
     <> string.join(builder.select_columns, ", ")
     <> " FROM "
     <> builder.table.name
 
-  let where_sql = case builder.where_clauses {
-    [] -> ""
-    clauses -> " WHERE " <> string.join(clauses, " AND ")
-  }
+  let where_sql = build_where(WhereBuilder(builder.table, builder.where_clauses))
 
   let order_by_sql = case builder.order_by_clauses {
-    [] -> ""
-    clauses -> " ORDER BY " <> string.join(clauses, ", ")
+    [] -> Ok("")
+    clauses -> Ok(" ORDER BY " <> string.join(clauses, ", "))
   }
 
-  base_query <> where_sql <> order_by_sql <> ";"
+  case where_sql, order_by_sql {
+    Ok(where_clause), Ok(order_clause) -> Ok(base_query <> where_clause <> order_clause <> ";")
+    Error(e), _ -> Error(e)  // Return error if where_sql is an error
+    _, Error(e) -> Error(e)  // Return error if order_by_sql is an error
+  }
 }
