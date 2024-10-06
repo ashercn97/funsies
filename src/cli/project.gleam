@@ -1,6 +1,7 @@
 //// A set of utilities to work within a Gleam project. I TOOK MOST OF THIS FROM THE SQUIRREL REPO. TYSM!
 ////
 
+import db/orm_gen
 import filepath
 import gleam/dict
 import gleam/erlang
@@ -13,7 +14,6 @@ import globlin_fs
 import shellout
 import simplifile
 import tom
-import db/orm_gen
 
 /// Returns the project's name, read from the `gleam.toml` file.
 ///
@@ -122,8 +122,12 @@ pub fn create_files(input: dict.Dict(String, String)) {
         <> ")"
         <> "\n"
         <> "orm_gen.create_insert("
-        <> "\"" <> "src/funs/insert.gleam" <> "\", "
-        <> val <> "." <> val
+        <> "\""
+        <> "src/funs/insert.gleam"
+        <> "\", "
+        <> val
+        <> "."
+        <> val
         <> "())"
         <> "\n"
       }),

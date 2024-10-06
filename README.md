@@ -37,9 +37,9 @@ To create the necessary types and decoders, run the following command:
 gleam run -m funsies
 ```
 
-And thats it! You will now have decoders and types for your schema. The decoders are used from the postgres driver to decode the results of your queries into the generated types. That way, you get easy-to-work-with and type-safe data.
+And thats it! You will now have decoders and types for your schema, as well as an `insert` command that is type-safe and ensures you are passing the correct values in the correct order. The decoders are used from the postgres driver to decode the results of your queries into the generated types. That way, you get easy-to-work-with and type-safe data.
 
-> The orm part is a work in progress. Below is what we CURRENTLY have.
+> The ORM/query builder is a work in progress. Below is what we CURRENTLY have.
 
 To create a query, you can use the `yummy` DSL.
 
@@ -95,3 +95,5 @@ This could look like:
 This will be propogated throughout, and you will get an `Error` value for the query instead of an `Ok` value.
 
 While you can still make invalid queries with the yummy DSL, you will not be able to make some common errors (i.e. passing the wrong type of value). This is because funsies checks the schema, sees that the column named "name" is a `String` column, and also sees that you are trying to pass an `Int` to an `equals`. Thus, it will return an error! Pretty cool if I do say so myself 🤓
+
+You can also insert values.
