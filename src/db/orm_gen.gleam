@@ -16,5 +16,6 @@ pub fn create_get_all(path: String, table: schema.Table) {
 
 pub fn create_insert(path: String, table: schema.Table) {
   let str = insert.render(table)
-  let assert Ok(results) = simplifile.write(path, contents: str)
+  let results = simplifile.write(path, contents: str)
+  results
 }

@@ -3,6 +3,7 @@ import gleam/bool
 import gleam/dynamic
 import gleam/int
 import gleam/list
+import gleam/queue
 import gleam/result
 import gleam/string
 

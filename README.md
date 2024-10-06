@@ -82,3 +82,16 @@ y.or(y.and(y.not(y.equals("name", "Alice")), y.equals("id", 4)), y.equals("id", 
 Now, you might see the issue with this "traditional" syntax. It is HARD. TO. READ! Why have an ugly syntax in such a beautiful language?
 
 So, we use the stack-based DSL. It may take a bit of getting used to, but it's worth it!
+
+There are other benefits to our DSL. For example, we have full type-safety. This is because we use the types directly in the DSL to build the query. This means that if you try to add a `String` where a `Bool` is expected, the type-checker will catch it. By expected I mean the type of the column that you are referencing (EVEN THOUGH YOU ARE JUST PASSING A STRING! Magic of the schema :D)
+
+This could look like:
+
+```gleam
+|> y.equals("name", 1) // Error, 1 is not a string. It knows that the name value of the column is a string, so it can't be compared to an int.
+|> y.equals("is_active", "true") // Error, "true" is not a bool
+```
+
+This will be propogated throughout, and you will get an `Error` value for the query instead of an `Ok` value.
+
+While you can still make invalid queries with the yummy DSL, you will not be able to make some common errors (i.e. passing the wrong type of value). This is because funsies checks the schema, sees that the column named "name" is a `String` column, and also sees that you are trying to pass an `Int` to an `equals`. Thus, it will return an error! Pretty cool if I do say so myself 🤓
