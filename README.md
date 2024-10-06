@@ -1,164 +1,84 @@
-# funsies
+# Funsies
 
-> Use your database with childlike enthusiasm. Its more than fun-- it's funsies!
-
-A fun, type-safe ORM for `Gleam`! (Work in progress, expect big changes! ALSO ASK QUESTIONS IF YOU WANT/NEED/ARE INTERESTED IN ANY OF IT!)
-
-> [!IMPORTANT]
-> Now with a CLI! Now, have your schemas automatically generate types and decoders!
-
-These docs are a bit out of date. Will soon be updated.
+> A fun, friendly, and type-safe ORM for Gleam! Compose type-safe SQL queries, generate decoders and types from schemas, and with a fun CLI!
 
 ## About
 
-`Funsies` is a work in progress.
+Funsies is a type-safe ORM for Gleam. Obviously, there are other database tools for Gleam. But, I found that most of them felt too barebones for my taste. So, I built the ORM of my dreams.
 
-My goal with `funsies` was to create an easy-to-use, friendly ORM for this magical language we call `Gleam`.
+Funsies comes with a DSL for schema creation (these schemas are used throughout the rest of the ORM), a DSL for building queries (with an innovative, stack-based approach), and a CLI for generating boilerplate code from your schemas. All in one, simple package.
 
-I think that Gleam has a ton of potential for the web (with `erlang` and `javascript` targets). But, to date the DB landscape in Gleam is wonderful, but a bit bare-bones.
+## Installation
 
-There are a few great projects (like squirrel) for using raw SQL, and some libraries for generating queries. There were not, however, many libraries for real, full-featured ORMs.
-
-That's what `funsies` is for!
-
-`Funsies` has awesome code-gen abilities, and type-safety, and is (in my opinion) fun to use.
-
-## Usage (with CLI)
-
-`Funsies` works based on Schemas. These schemas are used all the time when using `funsies`.
-
-In the pre-CLI days, you would have to use the provided functions to generate the types and decoders.
-
-This came with a couple of challenges:
-
-- Where do I keep my schemas? Are they separate from the rest of my code?
-- How do I create the types and decoders? Should I write a script? Just call a function? Or, worst of all, write it by hand?!
-
-Now, we have a CLI to manage the hard parts! All you do is create a `src/schema` folder. In that folder, you would create a file along the lines of `{schema_name}.gleam` and inside you would make a public function like this:
-
-```gleam
-pub fn {schema_name} {
-{schema}
-}
+```bash
+gleam add funsies
 ```
-
-Where schema is the schema you would normally put in your code, and the schema name is the same thing that you put in your file name.
-
-Now, run `gleam run -m funsies` and it will magically generate a new folder (`src/funs`) with files for each and every one of your Schemas!
 
 ## Usage
 
-`funsies` is designed to be used with the `gleam_pgo` package for connecting to a postgres database. Currently, it only supports `postgres` database. Eventually I plan for it to support many DBs.
+> THIS PART OF THE DOCS IS IN PROGRESSSSSSS
 
-To use funsies, clone the repo, add it to your project, and read through the tutorial below.
-
-## Tutorial
-
-First, set up a database object with the `gleam_pgo` package.
+To define a schema, create a `schema` folder in your `src` directory. Then, create a `{name}.gleam` file in there, where `{name}` is the name of the schema you're creating. For example, I'd create a `user.gleam` file with the following inside of it:
 
 ```gleam
-  let db =
-    pgo.connect(
-      pgo.Config(
-        ..pgo.default_config(),
-        host: "localhost",
-        database: "your_db_name",
-        user: "db_username",
-        port: 5432,
-        password: option.Some("db_password"),
-        pool_size: 15,
-      ),
-    )
+pub fn user() {
+  schema.create_table("user")
+  |> schema.add_serial_column("id")
+  |> schema.add_string_column("name", 255)
+  |> schema.add_bool_column("is_active")
+}
 ```
 
-Now, the fun begins!
+This is where the magic happens! This schema is the brains of your application. It tells Funsies how to create queries, type-check them, and generate pitch-perfect decoders. All with this little, **reusable** definition.
 
-When using `funsies`, you will be working with `Tables`. Tables are made using the `schema` module, which provides a DSL for building gleam structs that fully represent the table in the database, and are used all over the ORM.
+To create the necessary types and decoders, run the following command:
 
-To create a table, use syntax like the following:
+```bash
+gleam run -m funsies
+```
+
+And thats it! You will now have decoders and types for your schema. The decoders are used from the postgres driver to decode the results of your queries into the generated types. That way, you get easy-to-work-with and type-safe data.
+
+> The orm part is a work in progress. Below is what we CURRENTLY have.
+
+To create a query, you can use the `yummy` DSL.
+
+For example:
 
 ```gleam
-let user_table =
-schema.create_table("table_name")
-|> schema.add_serial_column("id") /// This is a column that autoincrements on insert.
-|> schema.add_string_column("name", 255) // this represents text
-|> schema.add_int_column("age") // this represents an integer
-|> schema.add_bool_column("is_active") //this represents a boolean!
+import db/query/yummy as y
+import schema/users
+import gleam/io.{debug}
+
+pub fn main() {
+  let table = users.users()
+
+  let query =y.new(table)
+  |> y.select()
+  |> y.where(
+    y.wb(table)
+    |> y.equals("name", "Alice")
+    |> y.not()
+    |> y.equals("id", 4)
+    |> y.and()
+    |> y.equals("id", 5)
+    |> y.or()
+  )
+  |> y.to_sql()
+
+  case query {
+    Ok(sql) => debug(sql)
+    Error(_) => debug("Error!")
+  }
+}
 ```
 
-This table object is POWERFUL. It is used to generate types, to perform queries, etc.
-
-To use this table, we can first perform a migration to create the table in our database. We need to generate the SQL, and then run it (this part I eventually want to make more seamless. Add a PR if you want to help!)
+This might look a bit weird at first. Don't worry! It is natural. Instead of usual composition of functions, we use a stack-based DSL. This allows for a neater, more readable syntax. This yummy query would look like this in a more traditional DSL:
 
 ```gleam
-let user_table_sql = schema.generate_create_table_sql(user_table)
-user_table_sql
-|> pgo.execute(db, [], dynamic.dynamic)
+y.or(y.and(y.not(y.equals("name", "Alice")), y.equals("id", 4)), y.equals("id", 5))
 ```
 
-Now, we have a table in our database!
+Now, you might see the issue with this "traditional" syntax. It is HARD. TO. READ! Why have an ugly syntax in such a beautiful language?
 
-The next step is to generate some types and decoders. This, as mentioned earlier, uses the table value!
-
-Decoders and types are generated like this:
-
-```gleam
-import db/decoder
-decoder.generate_row_type(user_table)
-decoder.generate_decoder_code(user_table)
-```
-
-Then the magic happens! Automatically, you will have a type and decoder generated for you! They will be in the `src/schema` directory, under files named after the table. The type will be named `{table_name}Row{columns}`, and the decoder will be named `{table_name}_decoder_{columns}`. (ALSO WORKING ON THIS TO MAKE NICER NAMES)
-
-Now, we can import our generated types and use them to create an `ORM`.
-
-```gleam
-import db/orm
-import schema/users6
-import schema/users6_decoder
-
-let user_decoder = users6_decoder.users6_decoder_idnameisactive()
-
-let user_orm =
-  orm.orm(users6.Users6RowIdNameIsactive, user_table, db, user_decoder) // this is the ORM! The IdNameIsactive is the columns of the table we made earlier. This is so we can have many different types/decoders if we want to select only some columns!
-```
-
-Now the ORM can be used to perform queries!
-
-```gleam
-let fetched_user_result = user_orm.by_id(2)
-
-io.debug(fetched_user_result)  // This will be serialized into the types you generated earlier! No more messing around with `dynamic` types!
-
-let all_users_result = user_orm.get_all()
-
-io.debug(all_users_result)
-
-let new_user_values = [pgo.text("Asher"), pgo.int(15), pgo.bool(True)] // no ID since auto-increments!
-
-let insert_result = user_orm.insert(new_user_values)
-
-io.debug(insert_result)
-```
-
-Magical, right?
-
-Finally, we can use the `yum` DSL to build more complex queries.
-
-```gleam
-import db/query/yum
-
-let query =
-  yum.new("users6")
-  |> yum.select(["name", "is_active"])
-  |> yum.where("is_active = TRUE")
-  |> yum.to_sql()
-```
-
-This will return a string SQL query. To use it, you can generate new types using only the columns you are returning and have it decode into that decoder! Or just use the dynamic type if you want :)
-
-## Contributing
-
-PLEASE CONTRIBUTE! I am new to Gleam, and if there are any improvements, docs, tests, new features, improvements of current features, or anything else you want to contribute, PLEASE make a PR! I would LOVE the help.
-
-THANKS SO MUCH!
+So, we use the stack-based DSL. It may take a bit of getting used to, but it's worth it!
