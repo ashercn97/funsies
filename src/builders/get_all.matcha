@@ -1,4 +1,4 @@
-{> import db/schema.{type Table, type Column}
+{> import funsies/schema.{type Table, type Column}
 {> import gleam/string 
 
 {> fn columns(table: Table)

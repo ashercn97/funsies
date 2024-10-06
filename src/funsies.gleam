@@ -1,4 +1,4 @@
-import cli/project
+import cli_project/project
 import gleam/dict
 import gleam/erlang/process
 import gleam/io

@@ -1,7 +1,7 @@
 {> with table as Table
 
-{> import db/query/yummy
-{> import db/schema.{type Table, type Column}
+{> import funsies/query/yummy
+{> import funsies/schema.{type Table, type Column}
 {> import gleam/string 
 {> import gleam/int 
 {> import gleam/pgo.{type Value} 
@@ -12,7 +12,7 @@
 import funs/{{ table.name }}_decoder
 import funs/{{ table.name }}
 import gleam/pgo 
-import db/query/yummy
+import funsies/query/yummy
 import gleam/list
 import gleam/string
 

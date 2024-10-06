@@ -1,8 +1,8 @@
-import db/schema
+import funsies/schema
 import simplifile
-import templates/by_id
-import templates/get_all
-import templates/insert
+import builders/by_id
+import builders/get_all
+import builders/insert
 
 pub fn create_by_id(path: String, table: schema.Table) {
   let str = by_id.render(table)

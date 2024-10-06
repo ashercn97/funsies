@@ -1,4 +1,4 @@
-import db/schema
+import funsies/schema
 import gleam/bool
 import gleam/dynamic
 import gleam/int
