@@ -46,7 +46,7 @@ To create a query, you can use the `yummy` DSL.
 For example:
 
 ```gleam
-import db/query/yummy as y
+import funsies/query/yummy as y
 import schema/users
 import gleam/io.{debug}
 
