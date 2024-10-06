@@ -3,6 +3,7 @@
 
 import filepath
 import gleam/dict
+import gleam/erlang
 import gleam/io
 import gleam/list
 import gleam/result
@@ -12,7 +13,6 @@ import globlin_fs
 import shellout
 import simplifile
 import tom
-import gleam/erlang
 
 /// Returns the project's name, read from the `gleam.toml` file.
 ///
@@ -59,20 +59,24 @@ fn find_root(path: String) -> String {
 pub fn find_schema_files() -> Result(dict.Dict(String, String), Nil) {
   let current_root = root()
   io.println("Current root: " <> current_root)
-  
+
   let assert Ok(cwd) = simplifile.current_directory()
-  
-  let assert Ok(pattern) = globlin.new_pattern(filepath.join(cwd, "/src/schema/*.gleam"))
-  
+
+  let assert Ok(pattern) =
+    globlin.new_pattern(filepath.join(cwd, "/src/schema/*.gleam"))
+
   case globlin_fs.glob(pattern, returning: globlin_fs.RegularFiles) {
     Ok(files) -> {
       io.println("Files found: " <> files |> string.join(", "))
-      
+
       files
       |> list.map(fn(file) {
         let file_names = file |> filepath.base_name()
         let file_paths = "schema/" <> file_names
-        #(file_paths, file |> filepath.base_name() |> filepath.strip_extension())
+        #(
+          file_paths,
+          file |> filepath.base_name() |> filepath.strip_extension(),
+        )
       })
       |> dict.from_list()
       |> Ok()
@@ -123,7 +127,7 @@ pub fn create_files(input: dict.Dict(String, String)) {
 }
 
 pub fn work() {
-    let assert Ok(cwd) = simplifile.current_directory()
+  let assert Ok(cwd) = simplifile.current_directory()
   case
     shellout.command(
       "gleam",

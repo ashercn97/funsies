@@ -7,6 +7,8 @@ A fun, type-safe ORM for `Gleam`! (Work in progress, expect big changes! ALSO AS
 > [!IMPORTANT]
 > Now with a CLI! Now, have your schemas automatically generate types and decoders!
 
+These docs are a bit out of date. Will soon be updated.
+
 ## About
 
 `Funsies` is a work in progress.

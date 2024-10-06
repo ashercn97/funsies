@@ -15,7 +15,7 @@ import funs/{{ table.name }}_decoder
 import funs/{{ table.name }}
 import gleam/pgo 
 
-pub fn get_all(db: pgo.Connection) -> Result({{ table.name }}.{{ string.capitalise(table.name) }}{[ string_builder.from_string(string.trim(string_builder.to_string(columns(table)))) ]}, pgo.QueryError) {
+pub fn get_all(db: pgo.Connection) -> Result({{ table.name }}.{{ string.capitalise(table.name) }}Row, pgo.QueryError) {
   let query = "SELECT * FROM {{ table.name }}"
-  pgo.execute(db, [], {{ table.name }}.{{ table.name }}_decoder_{[ columns2(table) ]})
+  pgo.execute(db, [], {{ table.name }}.{{ table.name }}_decoder_)
 }

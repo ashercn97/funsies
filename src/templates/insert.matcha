@@ -35,7 +35,7 @@ import funs/{{ table.name }}_decoder
 import funs/{{ table.name }}
 import gleam/pgo 
 
-pub fn insert(db: pgo.Connection, values: List(Value)) -> Result({{ table.name }}.{{ string.capitalise(table.name) }}{[ string_builder.from_string(string.trim(string_builder.to_string(columns(table)))) ]}, pgo.QueryError) {
+pub fn insert(db: pgo.Connection, values: List(Value)) -> Result({{ table.name }}.{{ string.capitalise(table.name) }}Row, pgo.QueryError) {
   let query = "INSERT INTO {{ table.name }} ({[ columnsyay(table) ]}) VALUES ({[ num(table) ]})"
-  pgo.execute(db, [values], {{ table.name }}.{{ table.name }}_decoder_{[ columns2(table) ]})
+  pgo.execute(db, [values], {{ table.name }}.{{ table.name }}_decoder_)
 }

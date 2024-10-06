@@ -18,7 +18,8 @@ pub fn generate_row_type(table: schema.Table) {
         schema.IntColumn(name) -> name <> ": Int"
         schema.BoolColumn(name) -> name <> ": Bool"
         schema.SerialColumn(name) -> name <> ": Int"
-        schema.ForeignKeyColumn(name, _, _, ref_type) -> name <> ": " <> ref_type
+        schema.ForeignKeyColumn(name, _, _, ref_type) ->
+          name <> ": " <> ref_type
 
         _ -> ""
       }
@@ -30,13 +31,7 @@ pub fn generate_row_type(table: schema.Table) {
   let path = "./src/funs/" <> table.name <> ".gleam"
   let type_name = capitalized_name <> "Row" <> unique_id
   let type_definition =
-    "pub type "
-    <> type_name
-    <> " { "
-    <> type_name
-    <> "("
-    <> fields
-    <> ") }\n"
+    "pub type " <> type_name <> " { " <> type_name <> "(" <> fields <> ") }\n"
 
   simplifile.create_directory("./src/funs/")
 
@@ -54,8 +49,6 @@ pub fn generate_row_type(table: schema.Table) {
       io.debug("Generating...")
     }
   }
-
-
 }
 
 // Function to append decoder functions to an existing file
@@ -103,7 +96,11 @@ pub fn generate_decoder_code(table: schema.Table) {
         schema.SerialColumn(name) ->
           "  |> decode.field(" <> int.to_string(index) <> ", decode.int)"
         schema.ForeignKeyColumn(name, _, _, ref_type) ->
-          "  |> decode.field(" <> int.to_string(index) <> ", decode." <> string.lowercase(ref_type) <> ")"
+          "  |> decode.field("
+          <> int.to_string(index)
+          <> ", decode."
+          <> string.lowercase(ref_type)
+          <> ")"
         _ -> "  |> decode.field(" <> int.to_string(index) <> ", decode.string)"
       }
     })
@@ -139,13 +136,8 @@ pub fn generate_decoder_code(table: schema.Table) {
       io.debug("Generating...")
     }
   }
-
-
 }
 
 fn simple_hash(columns: List(schema.Column)) -> String {
-  columns
-  |> list.map(fn(column) { string.capitalise(column.name) })
-  |> list.map(fn(name) { string.replace(name, "_", "") })
-  |> string.join("")
+  ""
 }
