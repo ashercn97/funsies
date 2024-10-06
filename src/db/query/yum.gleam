@@ -1,10 +1,10 @@
 import db/schema
 import gleam/bool
+import gleam/dynamic
 import gleam/int
 import gleam/list
-import gleam/string
-import gleam/dynamic
 import gleam/result
+import gleam/string
 
 pub type QueryBuilder {
   QueryBuilder(
@@ -43,7 +43,7 @@ fn to_clause_string(eq: Eq) -> String {
 }
 
 fn to_clause(table: schema.Table, eq: Eq) {
-  let col = list.find(table.columns, fn (c) { c.name == eq.col})
+  let col = list.find(table.columns, fn(c) { c.name == eq.col })
   case is_col_type(table, eq.col, eq.value) {
     True -> to_clause_string(eq)
     False -> "FAILED!"
@@ -51,24 +51,26 @@ fn to_clause(table: schema.Table, eq: Eq) {
 }
 
 // helper function to check if value is right value
-fn is_right_value(value: Value, target: Value) -> Bool{
+fn is_right_value(value: Value, target: Value) -> Bool {
   case value, target {
     IntValue(_), IntValue(_) -> True
     StringValue(_), StringValue(_) -> True
     BoolValue(_), BoolValue(_) -> True
-    _ , _ -> False
+    _, _ -> False
   }
 }
 
 // Function to type check that values are equal to their column type
 fn is_col_type(table: schema.Table, col: String, value: Value) {
-  let assert Ok(col) = list.find(table.columns, fn (c) { c.name == col })
+  let assert Ok(col) = list.find(table.columns, fn(c) { c.name == col })
   case col {
     schema.StringColumn(_, _) -> is_right_value(value, StringValue("Test"))
     schema.BoolColumn(_) -> is_right_value(value, BoolValue(True))
-    schema.ForeignKeyColumn(_, _, _, _) -> is_right_value(value, IntValue(1)) // assumption TODO
+    schema.ForeignKeyColumn(_, _, _, _) -> is_right_value(value, IntValue(1))
+    // assumption TODO
     schema.IntColumn(_) -> is_right_value(value, IntValue(1))
-    schema.SerialColumn(_) -> is_right_value(value, IntValue(1)) // assumption TODO
+    schema.SerialColumn(_) -> is_right_value(value, IntValue(1))
+    // assumption TODO
   }
 }
 
@@ -93,21 +95,19 @@ fn wrap_value(value: dynamic.Dynamic) -> Value {
 pub fn equals(builder: WhereBuilder, col: String, value: v) -> WhereBuilder {
   WhereBuilder(
     table: builder.table,
-    clauses: list.append(builder.clauses, [to_clause(builder.table, Equals(col, wrap_value(dynamic.from(value))))]),
+    clauses: list.append(builder.clauses, [
+      to_clause(builder.table, Equals(col, wrap_value(dynamic.from(value)))),
+    ]),
   )
 }
 
 pub fn ere(table: schema.Table) {
-  WhereBuilder(
-    table,
-    []
-  )
+  WhereBuilder(table, [])
 }
 
 pub fn to_where(builder: WhereBuilder) {
   builder.clauses
 }
-
 
 // Initialize a new query builder for a table
 pub fn new(table: schema.Table) -> QueryBuilder {
@@ -118,7 +118,7 @@ pub fn new(table: schema.Table) -> QueryBuilder {
 pub fn select(builder: QueryBuilder) -> QueryBuilder {
   QueryBuilder(
     builder.table,
-    list.map(builder.table.columns, fn (c) {c.name}),
+    list.map(builder.table.columns, fn(c) { c.name }),
     builder.where_clauses,
     builder.order_by_clauses,
   )
