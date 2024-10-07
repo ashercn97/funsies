@@ -1,3 +1,14 @@
+//// Yummy! Yummy is the main query builder in funsies. It takes an approach I haven't seen very often: stack-based. Basically, each operation (especially seen in the `where` function)
+//// operates on a stack. Meaning that instead of doing something like:
+//// ```and(equals("id", 2), not(equals("name", "Asher")))```
+//// You would do something like:
+//// equals("id", 2)
+//// |> equals("name", "Asher")
+//// |> not()
+//// |> and()
+//// You catch my drift? Basically things like `not` pop a clause off the stack then wrap it in a Not and append it back. Pretty cool!
+//// 
+
 import funsies/schema
 import gleam/bool
 import gleam/dynamic
@@ -7,6 +18,8 @@ import gleam/option
 import gleam/queue
 import gleam/string
 
+/// This is what is passed through thge pipeline to (eventually) create the SQL query
+/// 
 pub type QueryBuilder {
   QueryBuilder(
     table: schema.Table,
@@ -20,11 +33,12 @@ pub type QueryBuilder {
   )
 }
 
+/// Passed thorugh the where pipeline
 pub type WhereBuilder {
   WhereBuilder(table: schema.Table, clauses: List(Eq))
 }
 
-// Value type
+/// Value type. used for type checking as well as sql making
 pub type Value {
   IntValue(Int)
   StringValue(String)
@@ -32,7 +46,7 @@ pub type Value {
   ErrorValue(String)
 }
 
-// Types for equalities
+/// Different types of equality. 
 pub type Eq {
   Equals(col: String, value: Value)
   Not(Eq)
@@ -40,7 +54,7 @@ pub type Eq {
   And(Eq, Eq)
 }
 
-// Wrap value
+
 fn wrap_value(value: dynamic.Dynamic) -> Value {
   case dynamic.bool(value) {
     Ok(value) -> BoolValue(value)
@@ -90,6 +104,10 @@ fn is_col_type(table: schema.Table, col: String, value: Value) -> Bool {
   }
 }
 
+/// This adds an Equal value to the stack where `col` is a string representing a column in your table
+///  and `value` is what it should be equal to. What is kinda cool is value can be anything but because of the types, it will automatically
+/// type check it and make sure the the type of v aligns with the type of the column that you specified. So handy!
+/// 
 pub fn equals(builder: WhereBuilder, col: String, value: v) -> WhereBuilder {
   let wrapped_value = wrap_value(dynamic.from(value))
   case is_col_type(builder.table, col, wrapped_value) {
@@ -106,6 +124,9 @@ pub fn equals(builder: WhereBuilder, col: String, value: v) -> WhereBuilder {
   }
 }
 
+/// Pops a value off the stack and wraps it in a Not
+/// Used to negate the most recent value
+/// Use after like an equals or something
 pub fn not(builder: WhereBuilder) -> WhereBuilder {
   case queue.pop_back(queue.from_list(builder.clauses)) {
     Ok(#(eq, rest)) ->
@@ -129,6 +150,8 @@ pub fn or(builder: WhereBuilder) -> WhereBuilder {
   }
 }
 
+/// Takes the two most recent things and makes an AND clause
+/// 
 pub fn and(builder: WhereBuilder) -> WhereBuilder {
   case queue.pop_back(queue.from_list(builder.clauses)) {
     Ok(#(eq1, rest1)) ->
@@ -144,6 +167,8 @@ pub fn and(builder: WhereBuilder) -> WhereBuilder {
   }
 }
 
+/// This stands for where-builder. Makes a new `WhereBuilder` object
+/// 
 pub fn wb(table: schema.Table) -> WhereBuilder {
   WhereBuilder(table, [])
 }
@@ -206,12 +231,12 @@ fn build(clauses, acc) -> Result(List(String), String) {
   }
 }
 
-// Initialize a new query builder for a table
+/// Initialize a new builder for the yummy.
 pub fn new(table: schema.Table) -> QueryBuilder {
   QueryBuilder(table, [], [], [], [], [])
 }
 
-// Add a select clause (selecting all columns by default)
+/// This (currently) selects all columns. Mandatory. Will hopefully eventually allow you to only select some, or maybe select things from other tables
 pub fn select(builder: QueryBuilder) -> QueryBuilder {
   QueryBuilder(
     builder.table,
@@ -223,7 +248,7 @@ pub fn select(builder: QueryBuilder) -> QueryBuilder {
   )
 }
 
-// Add a where clause
+/// This is where you put the wherebuilder.
 pub fn where(builder: QueryBuilder, condition: WhereBuilder) -> QueryBuilder {
   QueryBuilder(
     builder.table,
@@ -236,7 +261,7 @@ pub fn where(builder: QueryBuilder, condition: WhereBuilder) -> QueryBuilder {
   )
 }
 
-// Add an order by clause
+/// Order by. 
 pub fn order_by(
   builder: QueryBuilder,
   column: String,
@@ -252,7 +277,7 @@ pub fn order_by(
   )
 }
 
-// Build the final SQL query
+/// Build the final sql query if using a select query
 pub fn to_sql(builder: QueryBuilder) -> Result(String, String) {
   let base_query =
     "SELECT "
@@ -278,7 +303,7 @@ pub fn to_sql(builder: QueryBuilder) -> Result(String, String) {
   }
 }
 
-// Function to add insert columns and values
+/// NOT CURRENTLY USED
 pub fn insert(
   builder: QueryBuilder,
   // columns: List(String),
@@ -296,12 +321,12 @@ pub fn insert(
   )
 }
 
-// Public function to wrap values
+/// Public function to wrap values.
 pub fn w(v: v) {
   wrap_value(dynamic.from(v))
 }
 
-// Build the final SQL insert query
+/// Build the final SQL query whendoing an insert query.
 pub fn to_insert_sql(builder: QueryBuilder) -> Result(String, String) {
   case
     list.is_empty(builder.insert_columns),

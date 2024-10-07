@@ -1,12 +1,12 @@
 # Funsies
 
-> A fun, friendly, and type-safe ORM for Gleam! Compose type-safe SQL queries, generate decoders and types from schemas, and with a fun CLI!
+> A fun, friendly, and type-safe in-betweensies-ORM for Gleam! Compose type-safe SQL queries, generate decoders and types from schemas, and with a fun CLI!
 
 ## About
 
-Funsies is a type-safe ORM for Gleam. Obviously, there are other database tools for Gleam. But, I found that most of them felt too barebones for my taste. So, I built the ORM of my dreams.
+Funsies is a type-safe in-betweensies-ORM (?) for Gleam. Obviously, there are other database tools for Gleam. But, I found that most of them felt too barebones for my taste. So, I built the library of my dreams.
 
-Funsies comes with a DSL for schema creation (these schemas are used throughout the rest of the ORM), a DSL for building queries (with an innovative, stack-based approach), and a CLI for generating boilerplate code from your schemas. All in one, simple package.
+Funsies comes with a DSL for schema creation (these schemas are used throughout the rest of the package), a DSL for building queries (with an innovative, stack-based approach), and a CLI for generating boilerplate code from your schemas. All in one, simple package.
 
 ## Installation
 
@@ -122,3 +122,17 @@ pub fn main() {
 ```
 
 The reason it has to be generated is because of we want full type-safety + good code completeion and help.
+
+## Why do you say `in-betweensies-ORM`?
+
+I don't think `funsies` is a full-on ORM. I took a lot of inspiration from Ecto in the Phoenix/Elixir ecosystem. I think that it is a lot less bare-bones than some existing alternatives, but not as feature-rich (or heavy and difficult to learn) as a typical, traditional ORM.
+
+I'm not sure what to call it! `in-betweensies-ORM`? `micro-ORM`? `mini-ORM`?
+
+## Contributing
+
+Contributions in ANY way are super duper duper appreciated and encouraged! Leaving an issue, starring, or downloading and giving feedback are all amazing.
+
+## Docs
+
+Docs are **in progress**.
