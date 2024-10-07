@@ -22,7 +22,9 @@ pub fn main() {
   process.sleep(5)
   io.println(ansi.strikethrough("                           "))
 
-  io.println(ansi.bold(ansi.yellow("Generating the types + decoders...")))
+  io.println(
+    ansi.bold(ansi.yellow("Generating the types + decoders + insert code...")),
+  )
   project.work()
   io.println(ansi.strikethrough("                           "))
 

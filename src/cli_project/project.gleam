@@ -1,8 +1,9 @@
-//// A set of utilities to work within a Gleam project. I TOOK MOST OF THIS FROM THE SQUIRREL REPO. TYSM!
-////
+//// A set of utilities to work within a Gleam project and to make the CLI work. Some functions are from the Squirre repo, thanks so much!
+//// These help me orient myself within a gleam project, and also the creation of the `generate.gleam` file which is used to actually generate the code. 
+//// 
 
-import funsies/orm_gen
 import filepath
+import funsies/orm_gen
 import gleam/dict
 import gleam/erlang
 import gleam/io
@@ -16,7 +17,8 @@ import simplifile
 import tom
 
 /// Returns the project's name, read from the `gleam.toml` file.
-///
+/// FROM SQUIRREL PROJECT, TYSM
+/// 
 pub fn name() -> Result(String, Nil) {
   let configuration_path = filepath.join(root(), "gleam.toml")
 
@@ -36,14 +38,15 @@ fn try_nil(
 /// Finds the path of the project's `src` directory.
 /// This recursively walks up from the current directory until it finds a
 /// `gleam.toml` and builds it from there.
-///
+/// FROM SQUIRRLE PROJECT, TYSM
+/// 
 pub fn src() -> String {
   filepath.join(root(), "src")
 }
 
 /// Finds the path leading to the project's root folder. This recursively walks
 /// up from the current directory until it finds a `gleam.toml`.
-///
+/// FROM SWQUIRREL PROJECT, TYSM
 fn root() -> String {
   find_root(".")
 }
@@ -57,6 +60,8 @@ fn find_root(path: String) -> String {
   }
 }
 
+/// Finds the schema files (looks in src/schema/*.gleam), and returns them as a dictionary of the file_path and the name of the schema (by removing everything except hte final clause without the extensions)
+/// 
 pub fn find_schema_files() -> Result(dict.Dict(String, String), Nil) {
   let current_root = root()
   io.println("Current root: " <> current_root)
@@ -89,6 +94,9 @@ pub fn find_schema_files() -> Result(dict.Dict(String, String), Nil) {
   }
 }
 
+/// This has a bad name. Basically what it does is create the generate file, which is used to generate the types, decoders, and the `insert` function.
+/// The reason the insert function has to be generated is because it felt like the easiest way to maintain complete type-safety.
+/// 
 pub fn create_files(input: dict.Dict(String, String)) {
   let values = dict.values(input)
   simplifile.create_directory(src() <> "/funs/")
@@ -137,6 +145,8 @@ pub fn create_files(input: dict.Dict(String, String)) {
   simplifile.write(src() <> "/funs/generate.gleam", code)
 }
 
+/// Also a really bad name haha. This function is just a helper to run the gleam code that creates everything (the generate file).
+/// 
 pub fn work() {
   let assert Ok(cwd) = simplifile.current_directory()
   case

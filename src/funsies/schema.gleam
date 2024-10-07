@@ -1,3 +1,6 @@
+//// Schema! This is where the magic happens. Basically, this allows you to define ...
+//// TODO
+
 import gleam/dynamic
 import gleam/int
 import gleam/io
@@ -65,29 +68,39 @@ pub fn add_foreign_key_column(
   name: String,
   references_table: Table,
   references_column: String,
-) -> Table {
-  let column_referenced = case
-    list.find(references_table.columns, one_that: fn(a) {
-      a.name == references_column
+) -> Result(Table, String) {
+  let maybe_column_referenced =
+    list.find(references_table.columns, fn(column) {
+      case column {
+        StringColumn(ref_name, _) -> ref_name == references_column
+        IntColumn(ref_name) -> ref_name == references_column
+        BoolColumn(ref_name) -> ref_name == references_column
+        SerialColumn(ref_name) -> ref_name == references_column
+        ForeignKeyColumn(ref_name, _, _, _) -> ref_name == references_column
+      }
     })
-  {
-    Ok(c) -> c
-    Error(_) -> {
-      let assert Ok(value) = list.first(references_table.columns)
-      value
+
+  case maybe_column_referenced {
+    Ok(referenced_column) -> {
+      // Generate the foreign key column based on the type of the referenced column
+      let fk_column =
+        ForeignKeyColumn(
+          name,
+          references_table.name,
+          references_column,
+          sql_type(referenced_column),
+          // Get SQL type dynamically
+        )
+      Ok(Table(table.name, list.append(table.columns, [fk_column])))
     }
+    Error(_) ->
+      Error(
+        "Referenced column "
+        <> references_column
+        <> " does not exist in table "
+        <> references_table.name,
+      )
   }
-  Table(
-    table.name,
-    list.append(table.columns, [
-      ForeignKeyColumn(
-        name,
-        references_table.name,
-        references_column,
-        string.capitalise(sql_type(column_referenced)),
-      ),
-    ]),
-  )
 }
 
 pub fn add_serial_column(table: Table, name: String) -> Table {
@@ -99,8 +112,8 @@ fn sql_type(column: Column) -> String {
     StringColumn(_, size) -> "VARCHAR(" <> int.to_string(size) <> ")"
     IntColumn(_) -> "INT"
     BoolColumn(_) -> "BOOLEAN"
-    ForeignKeyColumn(_, _, _, _) -> "INT"
-    // Assuming foreign keys are INT
+    ForeignKeyColumn(_, _, _, ref_type) -> ref_type
+    // Uses the referenced type directly
     SerialColumn(_) -> "SERIAL"
   }
 }

@@ -96,4 +96,29 @@ This will be propogated throughout, and you will get an `Error` value for the qu
 
 While you can still make invalid queries with the yummy DSL, you will not be able to make some common errors (i.e. passing the wrong type of value). This is because funsies checks the schema, sees that the column named "name" is a `String` column, and also sees that you are trying to pass an `Int` to an `equals`. Thus, it will return an error! Pretty cool if I do say so myself 🤓
 
-You can also insert values.
+You can also insert values!
+
+Since you have a Schema, Funsies can generate type-safe insert functions for you! All you have to do is import `insert` from the `funs` (the folder with all the outputs from the codegen).
+
+```gleam
+import funs/insert
+import funsies/query/yummy as y
+import schema/users
+import gleam/io.{debug}
+import funs/users.{}
+
+pub fn main() {
+  let table = users.users()
+
+  let query = y.new(table)
+  |> y.insert(users.UsersRow("John", True)) // This is type-safe!
+  |> y.to_insert_sql()
+
+  case query {
+    Ok(sql) => debug(sql)
+    Error(_) => debug("Error!")
+  }
+}
+```
+
+The reason it has to be generated is because of we want full type-safety + good code completeion and help.
