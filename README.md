@@ -2,11 +2,19 @@
 
 > A fun, friendly, and type-safe in-betweensies-ORM for Gleam! Compose type-safe SQL queries, generate decoders and types from schemas, and with a fun CLI!
 
+Full type-safety derived from your schema.
+
 ## About
 
-Funsies is a type-safe in-betweensies-ORM (?) for Gleam. Obviously, there are other database tools for Gleam. But, I found that most of them felt too barebones for my taste. So, I built the library of my dreams.
+Funsies is a fully type-safe in-betweensies-ORM (?) for Gleam. Obviously, there are other database tools for Gleam. But, I found that most of them felt too barebones for my taste. So, I built the library of my dreams.
 
 Funsies comes with a DSL for schema creation (these schemas are used throughout the rest of the package), a DSL for building queries (with an innovative, stack-based approach), and a CLI for generating boilerplate code from your schemas. All in one, simple package.
+
+The schema allows for type checking, meaning the following will always be true:
+
+- You will not create a query asking for a column of type X to be equal to a value of type Y.
+- You will not insert values in the wrong order, or with the wrong types.
+- It will be pretty tough to make invalid queries.
 
 ## Installation
 

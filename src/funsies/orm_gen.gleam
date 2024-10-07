@@ -1,8 +1,8 @@
 /// This uses the matcha templates from `builder` to generate files. Only one currently used is create_insert, which creates the type-safe insert func.
 /// 
-import builders/by_id
-import builders/get_all
-import builders/insert
+import funsies/builders/by_id
+import funsies/builders/get_all
+import funsies/builders/insert
 import funsies/schema
 import simplifile
 
