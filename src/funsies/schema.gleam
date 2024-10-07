@@ -48,7 +48,6 @@ pub fn get_part_table(table: Table, columns: List(String)) -> Table {
   Table(table.name, filtered_columns)
 }
 
-
 fn check_if_column(table: Table, column_name: String) -> Result(Column, Nil) {
   table.columns
   |> list.find(fn(column) {

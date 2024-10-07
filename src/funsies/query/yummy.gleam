@@ -54,7 +54,6 @@ pub type Eq {
   And(Eq, Eq)
 }
 
-
 fn wrap_value(value: dynamic.Dynamic) -> Value {
   case dynamic.bool(value) {
     Ok(value) -> BoolValue(value)
@@ -77,7 +76,7 @@ fn to_string(value: Value) -> String {
   case value {
     StringValue(value) -> "'" <> value <> "'"
     IntValue(value) -> int.to_string(value)
-    BoolValue(value) -> bool.to_string(value)
+    BoolValue(value) -> string.uppercase(bool.to_string(value))
     ErrorValue(value) -> panic
   }
 }
