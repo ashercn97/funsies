@@ -1,5 +1,9 @@
 # Funsies
 
+>[!IMPORTANT]
+>THIS IS DEPRECATED. Check out [ormlette!](https://github.com/ashercn97/ormlette)
+
+
 > A fun, friendly, and type-safe in-betweensies-ORM for Gleam! Compose type-safe SQL queries, generate decoders and types from schemas, and with a fun CLI!
 
 Full type-safety derived from your schema.
